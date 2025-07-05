@@ -1,5 +1,9 @@
 package expo.modules.settings
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
+import androidx.core.os.bundleOf
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.net.URL
@@ -14,37 +18,24 @@ class ExpoSettingsModule : Module() {
     // The module will be accessible from `requireNativeModule('ExpoSettings')` in JavaScript.
     Name("ExpoSettings")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants(
-      "PI" to Math.PI
-    )
-
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
+    Events("onChangeTheme")
 
     // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      "Hello world! 👋"
+    Function("setTheme") { theme: String ->
+      getPreferences().edit().putString("theme", theme).apply()
+      this@ExpoSettingsModule.sendEvent("onChangeTheme", bundleOf("theme" to theme))
     }
 
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { value: String ->
-      // Send an event to JavaScript.
-      sendEvent("onChange", mapOf(
-        "value" to value
-      ))
-    }
 
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(ExpoSettingsView::class) {
-      // Defines a setter for the `url` prop.
-      Prop("url") { view: ExpoSettingsView, url: URL ->
-        view.webView.loadUrl(url.toString())
-      }
-      // Defines an event that the view can send to JavaScript.
-      Events("onLoad")
+    Function("getTheme") {
+      return@Function getPreferences().getString("theme", "system")
     }
+  }
+
+  private val context
+    get() = requireNotNull(appContext.reactContext)
+
+  private fun getPreferences(): SharedPreferences {
+    return context.getSharedPreferences(context.packageName + ".settings", Context.MODE_PRIVATE)
   }
 }

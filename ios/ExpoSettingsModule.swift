@@ -9,40 +9,18 @@ public class ExpoSettingsModule: Module {
     // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
     // The module will be accessible from `requireNativeModule('ExpoSettings')` in JavaScript.
     Name("ExpoSettings")
+      
+      Events("onChangeTheme")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants([
-      "PI": Double.pi
-    ])
-
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      return "Hello world! 👋"
-    }
-
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { (value: String) in
-      // Send an event to JavaScript.
-      self.sendEvent("onChange", [
-        "value": value
-      ])
-    }
-
-    // Enables the module to be used as a native view. Definition components that are accepted as part of the
-    // view definition: Prop, Events.
-    View(ExpoSettingsView.self) {
-      // Defines a setter for the `url` prop.
-      Prop("url") { (view: ExpoSettingsView, url: URL) in
-        if view.webView.url != url {
-          view.webView.load(URLRequest(url: url))
-        }
+      // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
+      Function("setTheme") { (theme: String) -> Void in
+          UserDefaults.standard.set(theme, forKey: "theme")
+          sendEvent("onChangeTheme", [ "theme": theme])
       }
-
-      Events("onLoad")
-    }
+      
+      Function("getTheme") { () -> String in
+          UserDefaults.standard.string(forKey: "theme") ?? "system"
+      }
+      
   }
 }
